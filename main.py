@@ -26,7 +26,7 @@ def doFlair():
     # continously monitor the stream of submitted posts.
     for submission in sbubby.stream.submissions():
         print(submission, "\n\tflair: ", submission.link_flair_text, "\n\tpost title: ", submission.title, "\n\t")
-        if submission.link_flair_text == "None":
+        if submission.link_flair_text == None:
             print("This post needs a flair!")
             #check to see if post already been messaged
             hasBeenMessaged = False
@@ -35,6 +35,7 @@ def doFlair():
                     hasBeenMessaged = True
             if not hasBeenMessaged:
                 print("message this post to remind to flair!!!")
+                #add to remind to flair database. Script will check database at the end of checking each submission?
             else:
                 print("no need for flair!")
 def doMagicEye():
