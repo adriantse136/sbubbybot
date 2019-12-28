@@ -18,26 +18,29 @@ sbubby = reddit.subreddit('sbubby')
 
 def main():
     print("Running SbubbyBot testing version.")
-    doFlair()
+    monitorSubmissions()
     print("Sbubbybot has finished running with no errors.")
 
-def doFlair():
-    print("Flair system started...")
-    # continously monitor the stream of submitted posts.
+def monitorSubmissions():
     for submission in sbubby.stream.submissions():
-        print(submission, "\n\tflair: ", submission.link_flair_text, "\n\tpost title: ", submission.title, "\n\t")
-        if submission.link_flair_text == None:
-            print("This post needs a flair!")
-            #check to see if post already been messaged
-            hasBeenMessaged = False
-            for comment in submission.comments:
-                if comment.author == reddit.user.me(): #if i have a top level comment then don't message
-                    hasBeenMessaged = True
-            if not hasBeenMessaged:
-                print("message this post to remind to flair!!!")
-                #add to remind to flair database. Script will check database at the end of checking each submission?
-            else:
-                print("no need for flair!")
+        #need to do flair stuff
+        doFlair(submission)
+        #need to check database afterwards to see if any are in need of recheck.
+
+def doFlair(submission):
+    #check to see if flair first
+    if submission.link_flair_text == None:
+        #check to see if post already been messaged
+        hasBeenMessaged = False
+        for comment in submission.comments:
+            if comment.author == reddit.user.me(): #if i have a top level comment then don't message
+                hasBeenMessaged = True
+        if not hasBeenMessaged:
+            print("message this post to remind to flair!!!")
+            #add to remind to flair database. Script will check database at the end of checking each submission?
+        else:
+            print("no need for flair message!")
+
 def doMagicEye():
     print("MAGIC_EYE_BOT comment checker started...")
 
