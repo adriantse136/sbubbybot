@@ -6,9 +6,10 @@ import threading #thread handler so multiple things can get done
 import os #to get enviroment variables containing secrets
 import psycopg2 #used for postgresql database stuff
 from datetime import datetime #need to get current time for multiple things
+import time #for time.sleep #TODO migrate all of datetime to time for less imports
 
 #Setting this var to true will allow the bot to actually comment on the post and not dry-run.
-PRODUCTION = False
+PRODUCTION = True
 
 #create the reddit instance for the bot to use
 reddit = praw.Reddit(
@@ -27,57 +28,98 @@ cur = database.cursor()
 
 def main():
     print("Running SbubbyBot testing version.")
-    monitorSubmissions()
+    while True:
+        print("<FLAIRS> Running monitor submissions.")
+        monitorSubmissions()
+        time.sleep(60)
     print("Sbubbybot has finished running with no errors.")
     database.close() #close the database connection.
 
 def monitorSubmissions():
-    for submission in sbubby.stream.submissions():
+    for submission in sbubby.new(limit=20):
 
         #TODO make moderator override thing
         #if submission.approved: #There is no such thing as approved. This will need to be changed.
         #    continue
 
         #need to do flair stuff
-        doFlair(submission)
+        if submission.clicked != True:
+            doFlair(submission)
+    database.commit() #some of the posts from the prev. for loop could have inserted into db, now do thing.
+    #after all the submissions are monitored and potentially added to db, now we need to check the database for marked posts
+    cur.execute("select * from flairs;")
+    rows = cur.fetchall()
 
-        #need to check database afterwards to see if any are in need of recheck.
-        #get all the items from the database (not that many b/c continous movements) and iterate over them
-        cur.execute("select * from flairs")
-        rows = cur.fetchall()
-         #10 minutes is 600 seconds
-        #print(now)
+    for row in rows: #row[0] = submission id, row[1] = time post created, row[2] = comment telling to flair id.
+        epochTime = row[1].timestamp()
+        now = datetime.now().timestamp()
+        submission = reddit.submission(row[0]) #lazy instance of the thing
+        #check if the post should be removed, otherwise, do nothing
+        if now - epochTime > 590 and submission.link_flair_text == None:
+            #remove the post.
+            print("<Database> Post ", submission.id, " is past the time and has no flair.")
+            print("<Database> Time's up! Remove post.")
 
-        for row in rows:
-            print("<Database> submission id: ", row[0])
-            print("<Database> Checking Database:: submission time: ", row[1])
-            epochTime = row[1].timestamp()
-            now = datetime.now().timestamp()
-            #check if the post should be removed, otherwise, do nothing
-            if epochTime - now > 600:
-                #remove the post.
-                print("<Database> Time's up! Remove post.")
-                submission = reddit.submission(row[0]) #lazy instance of the thing
+            #remove from database
+            cur.execute(f"DELETE from flairs where submission_id='{row[0]}';")
+
+            #do the comment thing
+            if PRODUCTION:
+                comment_id = row[2]
+                if comment_id == None:
+                    #need to find the real one
+                    for comment in submission.comments:
+                        if comment.author == reddit.user.me():
+                            comment_id = comment.id
+                    print("no comment found by me")
+                    continue #continues with the next submission in db
+                reddit.comment(comment_id).delete()
+                #TODO remove post itself
+                #TODO send a mail message or comment to tell user what happened.
+
+        elif submission.link_flair_text != None:
+            #there is a flair.
+            print(f"<Database> {submission.id} already has flair, removing from db.")
+            cur.execute(f"DELETE from flairs where submission_id='{row[0]}';")
+            if PRODUCTION:
+                #remove the comment as the flair is set
+                comment_id = row[2]
+                if comment_id == None:
+                    #need to find the real one
+                    for comment in submission.comments:
+                        if comment.author == reddit.user.me():
+                            comment_id = comment.id
+                    print("no comment found by me")
+                    continue #continues with the next submission in db
+                reddit.comment(comment_id).delete()
+
+    database.commit() #once all the querys set, then execute all at once.
+
 
 def doFlair(submission):
     #check to see if flair first
-    if submission.link_flair_text == None:
+    print("<Flair> Checking ", submission.id)
+    if submission.link_flair_text == None and submission.saved == False:
         #check to see if post already been messaged
         hasBeenMessaged = False
         for comment in submission.comments:
             if comment.author == reddit.user.me(): #if i have a top level comment then don't message
                 hasBeenMessaged = True
         if not hasBeenMessaged:
-            print(f"<Flair> message {submission.name} post to remind to flair!!!")
-            print("<Flair> created on: ", submission.created_utc)
-            cur.execute(f"INSERT INTO FLAIRS (submission_id, time_created) VALUES ('{submission.id}', to_timestamp({submission.created_utc})) ON CONFLICT (submission_id) DO NOTHING")
-            database.commit() #only need to do this one thing
+            submission.save()
+            print(f"<Flair> message {submission.name} post to remind to flair!")
+            print("<Flair>   created on: ", submission.created_utc)
+            comment_id = None #only used if PRODUCTION is true, will still insert into db as None
+            if PRODUCTION:
+                #make a comment on this post.
+                comment = submission.reply("""# It seems you didn't flair your post!
+                Please flair your post now or it might get taken down!
+                This comment was made by a bot (contact me @ u/CrazedPatel)""")
+                if comment != None:
+                    comment_id = comment.id
+            cur.execute(f"INSERT INTO FLAIRS (submission_id, time_created, comment_id) VALUES ('{submission.id}', to_timestamp({submission.created_utc}), '{comment_id}') ON CONFLICT (submission_id) DO NOTHING")
         else:
             print("<Flair> No need for flair message -- one already exists?")
-
-def recheckFlair(submission):
-    if submission.link_flair_text == None:
-        time = submission.created_utc
 
 def doMagicEye():
     print("<Magic Eye> MAGIC_EYE_BOT comment checker started...")
