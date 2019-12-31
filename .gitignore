@@ -1,3 +1,6 @@
 sbubbyEnv
 .vs
 logfile
+.env
+output.txt
+startAll.sh

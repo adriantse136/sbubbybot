@@ -1,3 +1,4 @@
 praw
 os
 threading
+psycopg2
