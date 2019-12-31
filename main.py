@@ -12,7 +12,7 @@ PRODUCTION = False
 
 #create the reddit instance for the bot to use
 reddit = praw.Reddit(
-        user_agent='(SbubbyBot) v. 1.1 by u/CrazedPatel',
+        user_agent='SbubbyBot v. 1.1 by u/CrazedPatel',
         client_id=os.environ['client_id'],
         client_secret=os.environ['client_secret'],
         username=os.environ['reddit_username'],
