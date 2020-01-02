@@ -9,7 +9,7 @@ from datetime import datetime #need to get current time for multiple things
 import time #for time.sleep #TODO migrate all of datetime to time for less imports
 
 #Setting this var to true will allow the bot to actually comment on the post and not dry-run.
-PRODUCTION = True
+PRODUCTION = False
 
 #create the reddit instance for the bot to use
 reddit = praw.Reddit(
