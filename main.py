@@ -2,13 +2,11 @@
 # u/SbubbyBot for the the mods of r/Sbubby
 
 import praw  # all the reddit i/o
-import threading  # thread handler so multiple things can get done
 import os  # to get enviroment variables containing secrets
 import psycopg2  # used for postgresql database stuff
 from datetime import datetime  # need to get current time for multiple things
-import time  # for time.sleep #TODO migrate all of datetime to time for less imports
-# need this to import env. vars while testing locally
-from dotenv import load_dotenv
+import time  # for time.sleep
+from dotenv import load_dotenv  # need this to import env. vars
 
 # load env variables (only for locally)
 load_dotenv()
@@ -46,9 +44,9 @@ def main():
 def monitorSubmissions():
     for submission in sbubby.new(limit=20):
 
-        # TODO make moderator override thing
-        # if submission.approved: #There is no such thing as approved. This will need to be changed.
-        #    continue
+        moderators = sbubby.moderator()
+        if submission.author in moderators:
+            continue
 
         # need to do flair stuff
         if submission.clicked is False:
@@ -65,6 +63,7 @@ def monitorSubmissions():
         now = datetime.now().timestamp()
         submission = reddit.submission(row[0])  # lazy instance of the thing
         # check if the post should be removed, otherwise, do nothing
+        # TODO make sure post is not removed before doing anything
         if now - epochTime > 590 and submission.link_flair_text is None:
             # remove the post.
             print("<Database> Post ", submission.id,
@@ -72,21 +71,26 @@ def monitorSubmissions():
             print("<Database> Time's up! Remove post.")
 
             # remove from database
-            cur.execute(f"DELETE from flairs where submission_id='{row[1]}';")
+            cur.execute(f"DELETE from flairs where submission_id='{row[0]}';")
 
             # do the comment thing
             if PRODUCTION:
                 comment_id = row[2]
                 if comment_id is None:
                     # need to find the real one
+                    submission.comments.replace_more(limit=None)
                     for comment in submission.comments:
                         if comment.author == reddit.user.me():
                             comment_id = comment.id
                     print("no comment found by me")
                     continue  # continues with the next submission in db
                 reddit.comment(comment_id).delete()
-                # TODO remove post itself
-                # TODO send a mail message or comment to tell user what happened.
+
+                if sbubby.user_is_moderator:
+                    # remove post
+                    submission.mod.remove(mod_note="Removed for lack of flair by sbubbybot")
+                    submission.mod.send_removal_message("Hi! Your post was removed because it had no flair after 10 minutes of you being notified to flair your post. This messsage was sent automatically, if you think it's an error, send a modmail")
+                    submission.unsave()
 
         elif submission.link_flair_text is None:
             # there is a flair.
@@ -98,6 +102,7 @@ def monitorSubmissions():
                 comment_id = row[2]
                 if comment_id is None:
                     # need to find the real one
+                    submission.comments.replace_more(limit=None)
                     for comment in submission.comments:
                         if comment.author == reddit.user.me():
                             comment_id = comment.id
