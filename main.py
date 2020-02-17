@@ -50,12 +50,12 @@ def main():
 def sundaySbubby():
     print("It is sunday. Sunday Sbubby started...")
     # Get and remove the flair templates:
-    # for flairTemp in sbubby.flair.templates:
-    #     print(flairTemp)
-    #     if flairTemp == "Eaten Fresh" or flairTemp == "IRL" or flairTemp == "Logoswap":
-    #         # found flair to remove -- now removing it!
-    #         if PRODUCTION:  # only actually remove if production is on
-    #             sbubby.flair.templates.delete(flairTemp["id"])
+    for flairTemp in sbubby.flair.templates:
+        print(flairTemp)
+        if flairTemp == "Eaten Fresh" or flairTemp == "IRL" or flairTemp == "Logoswap":
+            # found flair to remove -- now removing it!
+            if PRODUCTION:  # only actually remove if production is on
+                sbubby.flair.templates.delete(flairTemp["id"])
     # get the automod post.
     # sort subreddit by new for author:AutoModerator
     link = None
@@ -134,6 +134,8 @@ def monitorSubmissions():
         # need to do flair stuff
         if submission.clicked is False:
             doFlair(submission)
+            commonRepost(submission)
+
     # some of the posts from the prev. for loop could have inserted into db, now do thing.
     database.commit()
     # after all the submissions are monitored and potentially added to db, now we need to check the database for marked posts
@@ -243,9 +245,12 @@ def doMagicEye():
 
 def howMuchKarmaModmail():
     print("<Karma> Anti-\"how much karma\" bot started...")
+    # need to get a stream of modmail. Run this in own process?
+    # with the stream, check for key words in the post: How much Karma.
+    # auto-reply and hide post?
 
 
-def commonRepost():
+def commonRepost(submission):
     print("<Repost> Common reposts bot started...")
     # Check each item in the imgur album -- if any is over the threshold:
     #   make a comment with the similarity amount, and then give link that it is similar to.
