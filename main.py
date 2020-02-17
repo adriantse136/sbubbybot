@@ -10,7 +10,7 @@ from dotenv import load_dotenv  # need this to import env. vars
 from sys import exit  # to exit gracefully from Ctrl+c
 from signal import signal, SIGINT  # to exit gracefully from C
 
-# load env variables (only for locally)
+# load env variables (only for locally testing, heroku takes care of it othewise)
 load_dotenv()
 
 # Setting this var to true will allow the bot to actually comment on the post and not dry-run.
@@ -31,7 +31,7 @@ sbubby = reddit.subreddit('sbubby')
 magicEye = reddit.redditor('MAGIC_EYE_BOT')
 
 # connect to the postgresql database
-database = psycopg2.connect(user="postgres", password="qwerty",
+database = psycopg2.connect(user="postgres", password=os.environ['database_password'],
                             database=os.environ["database_name"], host=os.environ["DATABASE_URL"], port="5432")
 cur = database.cursor()
 
