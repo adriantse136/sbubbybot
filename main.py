@@ -38,23 +38,21 @@ cur = database.cursor()
 
 
 def main():
-    if True:  # use this if for testing small things.
-        attemptSundaySbubday()
-        return
-    # create the two threads:
-    #   1. common repost + flair submission stream
-    #   2. one-minute timer to do flairdb stuff + sunday sbubby
-    while True:
-        print("<FLAIRS> Running monitor submissions.")
-        # monitorSubmissions()
-        time.sleep(60)
-    print("Sbubbybot has finished running with no errors.")
-    database.close()  # close the database connection.
+    # if True:  # use this if for testing small things.
+    #    attemptSundaySbubday()
+    # return
+    print("creating threads")
+    oneMinTimerThread = threading.Thread(target=oneMinTimerThreadFunc)
+    repostAndFlairThread = threading.Thread(target=repostAndFlairThreadFunc)
+    print("starting threads")
+    oneMinTimerThread.start()
+    repostAndFlairThread.start()
+    print("threads started")
 
 
-def repostAndFlairThread():
+def repostAndFlairThreadFunc():
+    print("repost and flair thread started")
     for submission in sbubby.stream.submissions():
-
         # skip post if author is moderator
         moderators = sbubby.moderator()
         if submission.author in moderators:
@@ -68,7 +66,8 @@ def repostAndFlairThread():
             database.commit()
 
 
-def oneMinTimerThread():  # not exactly one minute
+def oneMinTimerThreadFunc():  # not exactly one minute
+    print("one Min Timer thread started")
     while True:
         # check for any flair stuff that needs to be checked up on
         checkFlairDB()
@@ -81,14 +80,23 @@ def oneMinTimerThread():  # not exactly one minute
 
 
 def attemptSundaySbubday():
-    print("Attempting to do a sunday sbubday activity!")
-    today = datetime.date.today()
+    print("<Sunday Sbubday> Attempting to do a sunday sbubday activity!")
+    today = datetime.today().weekday()
     print(today)
+    if today == 6:
+        # sunday, check if already post, if not, post
+        print("it is sunday")
+
+    elif today == 0:
+        # monday
+        print("it is monday")
+
     # TODO: finish this function!!!
     # get the current time. Check the date.
 
 
 def checkFlairDB():
+    print("<Database> checking flair db")
     cur.execute("select * from flairs;")
     rows = cur.fetchall()
 
@@ -210,6 +218,7 @@ def commonRepost(submission):
 def sigintHandler(signal, frame):
     print(f"\u001b[3D Received (most likely) Ctrl+c, exiting.")
     exit(0)
+    database.close()
 
 
 if __name__ == "__main__":
