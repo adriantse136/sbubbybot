@@ -4,3 +4,4 @@ logfile
 .env
 output.txt
 startAll.sh
+__pycache__
