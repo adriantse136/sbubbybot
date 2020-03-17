@@ -38,9 +38,10 @@ cur = database.cursor()
 
 
 def main():
-    # if True:  # use this if for testing small things.
-    #    attemptSundaySbubday()
-    # return
+    if True:  # use this if for testing small things.
+        for i in reddit.subreddit('finnkennedy').mod.log(limit=20):
+            print(i.subject)
+    return
     print("creating threads")
     oneMinTimerThread = threading.Thread(target=oneMinTimerThreadFunc)
     repostAndFlairThread = threading.Thread(target=repostAndFlairThreadFunc)
