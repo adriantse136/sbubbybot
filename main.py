@@ -32,8 +32,7 @@ sbubby = reddit.subreddit('sbubby')
 magicEye = reddit.redditor('MAGIC_EYE_BOT')
 
 # connect to the postgresql database
-database = psycopg2.connect(user="postgres", password=os.environ['database_password'],
-        database=os.environ["database_name"], host=os.environ["DATABASE_URL"], port="5432")
+database = psycopg2.connect(user="postgres", password=os.environ['database_password'], database=os.environ["database_name"], host=os.environ["DATABASE_URL"], port="5432")
 cur = database.cursor()
 
 
