@@ -10,6 +10,7 @@ import time  # for time.sleep
 from dotenv import load_dotenv  # need this to import env. vars
 from sys import exit  # to exit gracefully from Ctrl+c
 from signal import signal, SIGINT  # to exit gracefully from C
+import re  # regex for the modmail
 
 # load env variables (only for locally testing, heroku takes care of it othewise)
 load_dotenv()
@@ -19,11 +20,11 @@ PRODUCTION = False
 
 # create the reddit instance for the bot to use
 reddit = praw.Reddit(
-        user_agent='SbubbyBot v. 1.1 by u/CrazedPatel',
-        client_id=os.environ['client_id'],
-        client_secret=os.environ['client_secret'],
-        username=os.environ['reddit_username'],
-        password=os.environ['reddit_password'])
+    user_agent='SbubbyBot v. 1.1 by u/CrazedPatel',
+    client_id=os.environ['client_id'],
+    client_secret=os.environ['client_secret'],
+    username=os.environ['reddit_username'],
+    password=os.environ['reddit_password'])
 
 # mark the subreddit
 sbubby = reddit.subreddit('sbubby')
@@ -32,14 +33,17 @@ sbubby = reddit.subreddit('sbubby')
 magicEye = reddit.redditor('MAGIC_EYE_BOT')
 
 # connect to the postgresql database
-database = psycopg2.connect(user="postgres", password=os.environ['database_password'], database=os.environ["database_name"], host=os.environ["DATABASE_URL"], port="5432")
+database = psycopg2.connect(user="postgres", password=os.environ['database_password'],
+                            database=os.environ["database_name"], host=os.environ["DATABASE_URL"], port="5432")
 cur = database.cursor()
 
 
 def main():
-    # if True:  # use this if for testing small things.
-    #    attemptSundaySbubday()
-    # return
+    #    if True:  # use this if for testing small things.
+    #        for i in reddit.subreddit('finnkennedy').modmail.conversations(limit=20):
+    #            print(i.subject)
+    #            print("\t", i.obj_ids)
+    #        return
     print("creating threads")
     oneMinTimerThread = threading.Thread(target=oneMinTimerThreadFunc)
     repostAndFlairThread = threading.Thread(target=repostAndFlairThreadFunc)
@@ -109,7 +113,7 @@ def checkFlairDB():
         if now - epochTime > 590 and submission.link_flair_text is None:
             # remove the post.
             print("<Database> Post ", submission.id,
-                    " is past the time and has no flair.")
+                  " is past the time and has no flair.")
             print("<Database> Time's up! Remove post.")
 
             # remove from database
@@ -131,15 +135,15 @@ def checkFlairDB():
                 if sbubby.user_is_moderator:
                     # remove post
                     submission.mod.remove(
-                            mod_note="Removed for lack of flair by sbubbybot")
+                        mod_note="Removed for lack of flair by sbubbybot")
                     submission.mod.send_removal_message(
-                            "Hi! Your post was removed because it had no flair after 10 minutes of you being notified to flair your post. This messsage was sent automatically, if you think it's an error, send a modmail")
+                        "Hi! Your post was removed because it had no flair after 10 minutes of you being notified to flair your post. This messsage was sent automatically, if you think it's an error, send a modmail")
                     submission.unsave()
 
         elif submission.link_flair_text is None:
             # there is a flair.
             print(
-                    f"<Database> {submission.id} already has flair, removing from db.")
+                f"<Database> {submission.id} already has flair, removing from db.")
             cur.execute(f"DELETE from flairs where submission_id='{row[0]}';")
             if PRODUCTION:
                 # remove the comment as the flair is set
@@ -169,7 +173,7 @@ def doFlair(submission):
         if not hasBeenMessaged:
             submission.save()
             print(
-                    f"<Flair> message {submission.name} post to remind to flair!")
+                f"<Flair> message {submission.name} post to remind to flair!")
             print("<Flair>   created on: ", submission.created_utc)
             comment_id = None  # only used if PRODUCTION is true, will still insert into db as None
             if PRODUCTION:
@@ -180,7 +184,7 @@ def doFlair(submission):
                 if comment is not None:
                     comment_id = comment.id
             cur.execute(
-                    f"INSERT INTO FLAIRS (submission_id, time_created, comment_id) VALUES ('{submission.id}', to_timestamp({submission.created_utc}), '{comment_id}') ON CONFLICT (submission_id) DO NOTHING")
+                f"INSERT INTO FLAIRS (submission_id, time_created, comment_id) VALUES ('{submission.id}', to_timestamp({submission.created_utc}), '{comment_id}') ON CONFLICT (submission_id) DO NOTHING")
         else:
             print("<Flair> No need for flair message -- one already exists?")
 
@@ -202,9 +206,17 @@ def doMagicEye():
 
 def howMuchKarmaModmail():
     print("<Karma> Anti-\"how much karma\" bot started...")
-    # need to get a stream of modmail. Run this in own process?
-    # with the stream, check for key words in the post: How much Karma.
-    # auto-reply and hide post?
+    for conversation in sbubby.modmail.conversations(limit=20):
+        # for each mail, check for specific keywords: "How much Karma" "Karma requirement" "Karma minimum"
+        for message in conversation.message:
+            messageBody = message.body_markdown
+            # need to check if is a message or not, only do things in messages.
+            regex = r"karma.*minimum|minimum.*karma|How much.*karma|karma.*requirement|required.*karma"
+            regexmatch = re.search(regex, messageBody, flags=re.I)
+            if regexmatch:
+                # there is at least one occurence of this, so do thing
+                if PRODUCTION:
+                    conversation.reply("Thank you for your message, but it seems that this message is asking about the Karma requirement to post on r/sbubby. The Karma minimum is to help prevent spam and is secret. If your message is not about the Karma reqirement, please send a new message without the word Karma in it. Thanks :) This message was sent by the u/sbubbybot and is not perfect. We are working on improving it!")
 
 
 def commonRepost(submission):
@@ -246,7 +258,7 @@ def sundaySbubby():
     if link is None:
         # we weren't able to find a link, so fail angrily!!!
         print(
-                "\u001b[1mCould not find the Automoderator link! will use placeholder!\u001b[0m")
+            "\u001b[1mCould not find the Automoderator link! will use placeholder!\u001b[0m")
         message = """
 ```md
 For those out of the loop: Sunday Sbubday is a weekly event attempting to bring back more creativity and make Eef Freef/Eeble Freeble edits more common!
@@ -274,13 +286,13 @@ Yes: https://discord.gg/nErFsAA
         if link.stickied:
             link.mod.sticky(state=False)
         submission = sbubby.submit(
-                "Sunday Sbubday is today!", selftext=message)
+            "Sunday Sbubday is today!", selftext=message)
         submission.mod.distinguish(
-                how='yes', sticky=False)  # stickies to the top
+            how='yes', sticky=False)  # stickies to the top
 
 
-        def unSundaySbubby():
-            # add flairs eaten Fresh, Logoswap, IRL,
+def unSundaySbubby():
+    # add flairs eaten Fresh, Logoswap, IRL,
     # unsticky announcement post,
     # resticky requests post
     if PRODUCTION:
