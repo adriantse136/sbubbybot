@@ -112,8 +112,7 @@ def checkFlairDB():
         # TODO make sure post is not removed before doing anything
         if now - epochTime > 590 and submission.link_flair_text is None:
             # remove the post.
-            print("<Database> Post ", submission.id,
-                  " is past the time and has no flair.")
+            print("<Database> Post ", submission.id, " is past the time and has no flair.")
             print("<Database> Time's up! Remove post.")
 
             # remove from database
@@ -134,16 +133,13 @@ def checkFlairDB():
 
                 if sbubby.user_is_moderator:
                     # remove post
-                    submission.mod.remove(
-                        mod_note="Removed for lack of flair by sbubbybot")
-                    submission.mod.send_removal_message(
-                        "Hi! Your post was removed because it had no flair after 10 minutes of you being notified to flair your post. This messsage was sent automatically, if you think it's an error, send a modmail")
+                    submission.mod.remove(mod_note="Removed for lack of flair by sbubbybot")
+                    submission.mod.send_removal_message("Hi! Your post was removed because it had no flair after 10 minutes of you being notified to flair your post. This messsage was sent automatically, if you think it's an error, send a modmail")
                     submission.unsave()
 
         elif submission.link_flair_text is None:
             # there is a flair.
-            print(
-                f"<Database> {submission.id} already has flair, removing from db.")
+            print(f"<Database> {submission.id} already has flair, removing from db.")
             cur.execute(f"DELETE from flairs where submission_id='{row[0]}';")
             if PRODUCTION:
                 # remove the comment as the flair is set
@@ -172,8 +168,7 @@ def doFlair(submission):
                 hasBeenMessaged = True
         if not hasBeenMessaged:
             submission.save()
-            print(
-                f"<Flair> message {submission.name} post to remind to flair!")
+            print(f"<Flair> message {submission.name} post to remind to flair!")
             print("<Flair>   created on: ", submission.created_utc)
             comment_id = None  # only used if PRODUCTION is true, will still insert into db as None
             if PRODUCTION:
@@ -183,8 +178,7 @@ def doFlair(submission):
                 This comment was made by a bot (contact me @ u/CrazedPatel)""")
                 if comment is not None:
                     comment_id = comment.id
-            cur.execute(
-                f"INSERT INTO FLAIRS (submission_id, time_created, comment_id) VALUES ('{submission.id}', to_timestamp({submission.created_utc}), '{comment_id}') ON CONFLICT (submission_id) DO NOTHING")
+            cur.execute(f"INSERT INTO FLAIRS (submission_id, time_created, comment_id) VALUES ('{submission.id}', to_timestamp({submission.created_utc}), '{comment_id}') ON CONFLICT (submission_id) DO NOTHING")
         else:
             print("<Flair> No need for flair message -- one already exists?")
 
@@ -257,8 +251,7 @@ def sundaySbubby():
         break
     if link is None:
         # we weren't able to find a link, so fail angrily!!!
-        print(
-            "\u001b[1mCould not find the Automoderator link! will use placeholder!\u001b[0m")
+        print("\u001b[1mCould not find the Automoderator link! will use placeholder!\u001b[0m")
         message = """
 ```md
 For those out of the loop: Sunday Sbubday is a weekly event attempting to bring back more creativity and make Eef Freef/Eeble Freeble edits more common!
@@ -285,10 +278,8 @@ Yes: https://discord.gg/nErFsAA
     if PRODUCTION:
         if link.stickied:
             link.mod.sticky(state=False)
-        submission = sbubby.submit(
-            "Sunday Sbubday is today!", selftext=message)
-        submission.mod.distinguish(
-            how='yes', sticky=False)  # stickies to the top
+        submission = sbubby.submit("Sunday Sbubday is today!", selftext=message)
+        submission.mod.distinguish(how='yes', sticky=False)  # stickies to the top
 
 
 def unSundaySbubby():
