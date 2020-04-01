@@ -95,11 +95,18 @@ def attemptSundaySbubday():
     if today == 6:
         # sunday, check if already post, if not, post
         print("it is sunday")
-
+        stickyNum = 0
+        for i in range(1, 3):
+            try:
+                post = sbubby.sticky()
+                if "Sunday Sbubby" in post.title:
+                    stickyNum = i
+                    break
+            except:
+                print("no sticky at index ", i)
     elif today == 0:
         # monday
         print("it is monday")
-
     # TODO: finish this function!!!
     # get the current time. Check the date.
 
@@ -187,21 +194,6 @@ def doFlair(submission):
             cur.execute(f"INSERT INTO FLAIRS (submission_id, time_created, comment_id) VALUES ('{submission.id}', to_timestamp({submission.created_utc}), '{comment_id}') ON CONFLICT (submission_id) DO NOTHING")
         else:
             print("<Flair> No need for flair message -- one already exists?")
-
-
-def doMagicEye():
-    print("<Magic Eye> MAGIC_EYE_BOT comment checker started...")
-    # get all the comments from MAGIC_EYE_BOT and in r/Sbubby
-#    for comment in magicEye.stream.comments():
-#        if comment.subreddit == "sbubby":
-
-    # check author
-    # if it isn't magic eye, ignore
-    # if it is magic eye
-    #   check child comments for any replies from the parent post's author
-    #   if there are none, reapprove
-    #   if there is one but is a short comment that isn't requesting a post review at all, reapprove
-    #   if it doesn't appear to be a short comment not requesting a review, ignore thread for mod review
 
 
 def howMuchKarmaModmail():
