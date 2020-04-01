@@ -39,7 +39,7 @@ try:
                                 database=os.environ["database_name"], host=os.environ["DATABASE_URL"], port="5432")
 except:
     print("Error connecting normal way, try other way")
-    psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+    database = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
 
 cur = database.cursor()
 
