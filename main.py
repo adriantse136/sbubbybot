@@ -128,8 +128,13 @@ def checkFlairDB():
         now = datetime.now().timestamp()
         submission = reddit.submission(row[0])  # lazy instance of the thing
         # check if the post should be removed, otherwise, do nothing
-        # TODO make sure post is not removed before doing anything
-        if now - epochTime > 590 and submission.link_flair_text is None:
+        link_flair_text = 0
+        try:
+            link_flair_text = submission.link_flair_text
+        except:
+            print("error could not get")
+
+        if now - epochTime > 590 and link_flair_text is None:
             # remove the post.
             print("<Database> Post ", submission.id, " is past the time and has no flair.")
             print("<Database> Time's up! Remove post.")
@@ -138,23 +143,26 @@ def checkFlairDB():
             cur.execute(f"DELETE from flairs where submission_id='{row[0]}';")
 
             # do the comment thing
-            if PRODUCTION:
-                comment_id = row[2]
-                if comment_id is None:
-                    # need to find the real one
-                    submission.comments.replace_more(limit=None)
-                    for comment in submission.comments:
-                        if comment.author == reddit.user.me():
-                            comment_id = comment.id
-                    print("no comment found by me")
-                    continue  # continues with the next submission in db
-                reddit.comment(comment_id).delete()
+            try:
+                if PRODUCTION:
+                    comment_id = row[2]
+                    if comment_id is None:
+                        # need to find the real one
+                        submission.comments.replace_more(limit=None)
+                        for comment in submission.comments:
+                            if comment.author == reddit.user.me():
+                                comment_id = comment.id
+                        print("no comment found by me")
+                        continue  # continues with the next submission in db
+                    reddit.comment(comment_id).delete()
 
-                if sbubby.user_is_moderator:
-                    # remove post
-                    submission.mod.remove(mod_note="Removed for lack of flair by sbubbybot")
-                    submission.mod.send_removal_message("Hi! Your post was removed because it had no flair after 10 minutes of you being notified to flair your post. This messsage was sent automatically, if you think it's an error, send a modmail")
-                    submission.unsave()
+                    if sbubby.user_is_moderator:
+                        # remove post
+                        submission.mod.remove(mod_note="Removed for lack of flair by sbubbybot")
+                        submission.mod.send_removal_message("Hi! Your post was removed because it had no flair after 10 minutes of you being notified to flair your post. This messsage was sent automatically, if you think it's an error, send a modmail")
+                        submission.unsave()
+            except:
+                print("<Database> Could not do: post could have been deleted?? postid=", row[0])
 
         elif submission.link_flair_text is None:
             # there is a flair.
