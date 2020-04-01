@@ -91,24 +91,30 @@ def oneMinTimerThreadFunc():  # not exactly one minute
 def attemptSundaySbubday():
     print("<Sunday Sbubday> Attempting to do a sunday sbubday activity!")
     today = datetime.today().weekday()
+
+    # check whether there is a post. stickyNum = 0 means no post
+    stickyNum = 0
+    for i in range(1, 3):
+        try:
+            post = sbubby.sticky()
+            if "Sunday Sbubday" in post.title:
+                stickyNum = i
+                break  # there is a post, no need to do anything.
+        except:
+            print("no sticky at index ", i)
+            break  # no more sticky posts, need to add post
+
     print(today)
     if today == 6:
         # sunday, check if already post, if not, post
         print("it is sunday")
-        stickyNum = 0
-        for i in range(1, 3):
-            try:
-                post = sbubby.sticky()
-                if "Sunday Sbubby" in post.title:
-                    stickyNum = i
-                    break
-            except:
-                print("no sticky at index ", i)
+        if stickyNum == 0:
+            sundaySbubby()
     elif today == 0:
         # monday
         print("it is monday")
-    # TODO: finish this function!!!
-    # get the current time. Check the date.
+        if stickyNum != 0:
+            unSundaySbubby()
 
 
 def checkFlairDB():
