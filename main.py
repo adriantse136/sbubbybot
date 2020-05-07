@@ -37,7 +37,8 @@ database = ""
 try:
     database = psycopg2.connect(user="postgres", password=os.environ['database_password'],
                                 database=os.environ["database_name"], host=os.environ["DATABASE_URL"], port="5432")
-except:
+except Exception as err:
+    print(err)
     print("Error connecting normal way, try other way")
     database = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
 
@@ -100,7 +101,8 @@ def attemptSundaySbubday():
             if "Sunday Sbubday" in post.title:
                 stickyNum = i
                 break  # there is a post, no need to do anything.
-        except:
+        except Exception as err:
+            print(err)
             print("no sticky at index ", i)
             break  # no more sticky posts, need to add post
 
@@ -131,7 +133,8 @@ def checkFlairDB():
         link_flair_text = 0
         try:
             link_flair_text = submission.link_flair_text
-        except:
+        except Exception as err:
+            print(err)
             print("error could not get")
 
         if now - epochTime > 590 and link_flair_text is None:
@@ -161,7 +164,8 @@ def checkFlairDB():
                         submission.mod.remove(mod_note="Removed for lack of flair by sbubbybot")
                         submission.mod.send_removal_message("Hi! Your post was removed because it had no flair after 10 minutes of you being notified to flair your post. This messsage was sent automatically, if you think it's an error, send a modmail")
                         submission.unsave()
-            except:
+            except Exception as err:
+                print(err)
                 print("<Database> Could not do: post could have been deleted?? postid=", row[0])
 
         elif submission.link_flair_text is None:
@@ -309,7 +313,8 @@ def unSundaySbubby():
                 stickied = sbubby.sticky(number=i)
                 if stickied.author == reddit.user.me():
                     stickied.mod.sticky(state=False)
-            except:
+            except Exception as err:
+                print(err)
                 break
         # sticky most recent automod post.
         for submission in sbubby.search("author:AutoModerator", sort="new", time_filter="week"):
