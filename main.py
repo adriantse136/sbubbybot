@@ -30,7 +30,7 @@ reddit = praw.Reddit(
 sbubby = reddit.subreddit('sbubby')
 
 # MAGIC_EYE_BOT's profile
-magicEye = reddit.redditor('MAGIC_EYE_BOT')
+# magicEye = reddit.redditor('MAGIC_EYE_BOT')
 
 database = ""
 # connect to the postgresql database
