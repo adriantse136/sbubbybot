@@ -5,6 +5,7 @@ You will need to add all the environment variables (see below) as well as create
 ## Running locally -> not on Heroku
 Run the main.py file after you set up the database and .env file (and ofc installing dependencies from requirements.txt)
 This runs on python3.7 and 3.8 and probably older too but not tested.
+You will also need to set `PRODUCTION` variable in main.py to True for it to actually do actions.
 ## Enviroment Vars Needed
 The following variables should be put into a .env file in the root directory when testing locally.
 **DO NOT** let the env file be uploaded to Heroku, instead, these same variables will have to be defined in the Enviroment Variable settings IN HEROKU.
@@ -17,5 +18,6 @@ The following variables should be put into a .env file in the root directory whe
 | `database_name` | name of postgres database |
 | `database_password` | password (can be empty if no password) of database |
 | `DATABASE_URL` | url of database, on heroku this is autofilled |
+
 **`DATABASE_URL`** Must be all caps because Heroku will automatically set the Database URL for when it runs on Heroku.
-Need a postgres 12 database, TODO: instructions how to set up table  
+Need a postgres 12 database, TODO: instructions how to set up table
