@@ -20,4 +20,14 @@ The following variables should be put into a .env file in the root directory whe
 | `DATABASE_URL` | url of database, on heroku this is autofilled |
 
 **`DATABASE_URL`** Must be all caps because Heroku will automatically set the Database URL for when it runs on Heroku.
-Need a postgres 12 database, TODO: instructions how to set up table
+## Database setup instructions
+* Need a postgres 12 database, make it on user postgres (default user)
+* name it `flairs`
+* make the submission_id the primary key
+* copy paste of `\d flairs` below (aka how to do)
+
+|   Column     |            Type             | Collation | Nullable | Default 
+---------------|-----------------------------|-----------|----------|---------
+ submission_id | character(6)                |           | not null | 
+ time_created  | timestamp without time zone |           | not null | 
+ comment_id    | character varying(8)        |           |          | 
