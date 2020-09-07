@@ -218,7 +218,7 @@ def howMuchKarmaModmail():
     print("<Karma> Anti-\"how much karma\" bot started...")
     for conversation in sbubby.modmail.conversations(limit=20):
         # for each mail, check for specific keywords: "How much Karma" "Karma requirement" "Karma minimum"
-        for message in conversation.message:
+        for message in conversation.messages:
             messageBody = message.body_markdown
             # need to check if is a message or not, only do things in messages.
             regex = r"karma.*minimum|minimum.*karma|How much.*karma|karma.*requirement|required.*karma"
