@@ -255,7 +255,7 @@ def sundaySbubby():
         if flairTemp == "Eaten Fresh" or flairTemp == "IRL" or flairTemp == "Logoswap":
             # found flair to remove -- now removing it!
             if PRODUCTION:  # only actually remove if production is on
-                sbubby.flair.templates.delete(flairTemp["id"])
+                sbubby.flair.templates.update(flairTemp["id"], mod_only=True)
     # get the automod post.
     # sort subreddit by new for author:AutoModerator
     link = None
@@ -303,9 +303,11 @@ def unSundaySbubby():
     # unsticky announcement post,
     # resticky requests post
     if PRODUCTION:
-        sbubby.flair.link_templates.add("Eaten Fresh!")
-        sbubby.flair.link_templates.add("Logoswap")
-        sbubby.flair.link_templates.add("IRL")
+        for flairTemp in sbubby.flair.templates:
+            if flairTemp == "Eaten Fresh" or flairTemp == "IRL" or flairTemp == "Logoswap":
+                # found flair to remove -- now removing it!
+                if PRODUCTION:  # only actually remove if production is on
+                    sbubby.flair.templates.update(flairTemp["id"], mod_only=False)
 
         # unsticky my post by searching through all the stickied posts to find the one authored by me
         for i in range(1, 5):
