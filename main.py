@@ -301,17 +301,43 @@ def doFlair(submission):
 
 def howMuchKarmaModmail():
     logger.info("<Karma> Anti-\"how much karma\" bot started...")
-    for conversation in sbubby.modmail.conversations(limit=20):
+    ffor conversation in subreddit.modmail.conversations(limit=20):
         # for each mail, check for specific keywords: "How much Karma" "Karma requirement" "Karma minimum"
+        
+        # checks if the bot has already replied
+        hasBotReply = False;
         for message in conversation.messages:
-            messageBody = message.body_markdown
-            # need to check if is a message or not, only do things in messages.
+            print(message.body_markdown)
+            if not hasBotReply:
+                hasBotReply = message.author == 'BingerKurgBot'
+            
+            if hasBotReply:
+                break;
+            
+        # will only reply if it hasn't already
+        if not hasBotReply:
+            firstMessage = conversation.messages[0]
+            messageBody = firstMessage.body_markdown
+            
             regex = r"karma.*minimum|minimum.*karma|How much.*karma|karma.*requirement|required.*karma"
             regexmatch = re.search(regex, messageBody, flags=re.I)
             if regexmatch:
                 # there is at least one occurence of this, so do thing
                 if PRODUCTION:
-                    conversation.reply("Thank you for your message, but it seems that this message is asking about the Karma requirement to post on r/sbubby. The Karma minimum is to help prevent spam and is secret. If your message is not about the Karma reqirement, please send a new message without the word Karma in it. Thanks :) This message was sent by the u/sbubbybot and is not perfect. We are working on improving it!")
+                    logger.info("How much karma modmail detected, sending reply to " + str(conversation))
+                    conversation.reply("""Thank you for your message, but it seems that this message is asking about the Karma requirement to post on r/sbubby. The Karma minimum is to help prevent spam and is undisclosed to prevent trolls and spammers. **If your message is not about the required amount of karma but is for an approval request or another topic, don't worry, a human moderator will respond shortly.** However, you can go through our manual exemption process instead to post content as long as you make original sbubbies. The process is as follows:
+                    
+                    1. Message us with a link to your removed post. **Don't delete your post, we won't be able to review or approve it if you delete it.**
+                    
+                    1. A moderator will review your submission and asks questions if needed. If it can't be approved, we will explain how to make it acceptable to approve.
+                    
+                    1. If the submission is accepted, you will receive a reply telling you your submission was approved. If you've completed the process 3 times successfully, you will receive an alert telling you that you are an approved user.
+                    
+                    **Please note that you can only go through this process if you only post original sbubbies.**
+                    
+                    Thanks :) This message was sent by the u/sbubbybot and is not perfect. We are working on improving it!""")
+            
+
 
 
 def commonRepost(submission):
